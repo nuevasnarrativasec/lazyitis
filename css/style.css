@@ -530,7 +530,7 @@
     }
     .card-artist{
         font-size: 0.9rem;
-        min-height: 50px;
+        /*min-height: 50px;*/
     }
     .edition-text{
         font-size: 0.9rem;
