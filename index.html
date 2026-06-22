@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <meta name="robots" content="noindex">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lazyitis Discos — Catálogo de Vinilos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+    
+</header>
+
+<!-- MAIN -->
+<main class="main">
+    <!-- SEARCH -->
+    <div class="search-wrap">
+        <p>Revisa todo el catálogo que tenemos para ti</p>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Encuentra el disco que estás buscando" autocomplete="off">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+    </div>
+
+    <!-- GENRES -->
+    <div class="genres-wrap">
+        <button class="genres-toggle" id="genresToggle">
+            <span id="genresToggleLabel">Novedades</span>
+            <svg class="genres-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="genres" id="genreList"></div>
+    </div>
+
+    <!-- COUNTER -->
+    <p class="count-bar" id="countBar">Mostrando <span id="countNum">0</span> vinilos</p>
+
+    <!-- GRID -->
+    <div class="grid" id="catalog"></div>
+
+    <!-- INFINITE SCROLL SENTINEL -->
+    <div id="sentinel" style="display:none;">
+        <div class="spinner"></div>
+    </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true">
+    <div class="modal" id="modalBox">
+        <button class="modal-close" id="modalClose" aria-label="Cerrar">✕</button>
+        <div class="modal-cover" id="modalCover"></div>
+        <div class="modal-info">
+        <p class="modal-artist" id="modalArtist"></p>
+        <h2 class="modal-album" id="modalAlbum"></h2>
+        <span class="modal-version" id="modalVersion"></span>
+        <p class="modal-price" id="modalPrice"></p>
+        <p class="modal-edition" id="modalEdition"></p>
+        <div class="modal-genres" id="modalGenres"></div>
+        <div class="modal-actions" id="modalActions"></div>
+        </div>
+    </div>
+</div>
+
+<script src="./js/main.js?v9"></script>
+</body>
+</html>
