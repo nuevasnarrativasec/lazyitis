@@ -1,3 +1,15 @@
+// Parsea precios en cualquiera de estos formatos: "S/. 159,00", "S/159", "159"
+function parsePrice(raw) {
+    if (!raw) return 0;
+    const s = raw.trim();
+    // Si termina en coma + exactamente 2 dígitos (ej: "159,00"), tiene decimales
+    if (/,\d{2}$/.test(s)) {
+        return parseInt(s.replace(/[^\d]/g, '')) / 100 || 0;
+    }
+    // Si no tiene decimales, el número completo es el precio en soles
+    return parseInt(s.replace(/[^\d]/g, '')) || 0;
+}
+
 // ─── CONFIG ─────────────────────────────────────────────────────────────
 // ⚠️  Reemplaza con el número de WhatsApp de Lazyitis (formato: 51XXXXXXXXX)
 const WA_NUMBER  = '51999999999';
@@ -82,7 +94,7 @@ async function loadCatalog() {
             album:   (r[2] || '').trim(),
             version: (r[3] || '').trim(),
             image:   driveUrl((r[4] || '').trim()),
-            price:   r[5] ? parseInt(r[5].replace(/[^\d]/g, '')) || 0 : 0,
+            price:   parsePrice(r[5]),
             edition: (r[6] || '').trim(),
             pronto,
             novedad: r[7] === 'SÍ',         // col H — Novedades (columna Novedad eliminada, usamos ésta)
@@ -270,7 +282,7 @@ function buildCard(vinyl) {
     priceRow.className = 'card-price-row';
     const priceBadge = document.createElement('span');
     priceBadge.className = 'price-badge';
-    priceBadge.textContent = vinyl.price ? `S/${vinyl.price}` : 'Consultar';
+    priceBadge.textContent = vinyl.price ? `S/. ${vinyl.price.toFixed(2).replace('.', ',')}` : 'Consultar';
     priceRow.appendChild(priceBadge);
     if (vinyl.edition) {
         const ed = document.createElement('span');
@@ -359,7 +371,7 @@ function openModal(vinyl) {
     mArtist.textContent = vinyl.artist;
     mAlbum.textContent = vinyl.album;
     mVersion.textContent = vinyl.version;
-    mPrice.textContent = vinyl.price ? `S/${vinyl.price}` : 'Consultar precio';
+    mPrice.textContent = vinyl.price ? `S/. ${vinyl.price.toFixed(2).replace('.', ',')}` : 'Consultar precio';
     mEdition.textContent = vinyl.edition || '';
     mEdition.style.display = vinyl.edition ? '' : 'none';
     mGenres.innerHTML = '';
