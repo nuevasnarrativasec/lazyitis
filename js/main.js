@@ -231,7 +231,8 @@ const PAGE_SIZE = 75;
 let visibleCount = 0;
 
 const catalogEl = document.getElementById('catalog');
-const countEl   = document.getElementById('countNum');
+const countEl    = document.getElementById('countNum');
+const countLabel = document.getElementById('countLabel');
 const sentinel  = document.getElementById('sentinel');
 
 function filtered() {
@@ -322,6 +323,7 @@ function appendBatch(items) {
 function render() {
     const items = filtered();
     countEl.textContent = items.length;
+    countLabel.textContent = items.length === 1 ? 'vinilo' : 'vinilos';
     catalogEl.innerHTML = '';
     visibleCount = 0;
     sentinel.style.display = 'none';
