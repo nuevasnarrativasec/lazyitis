@@ -283,7 +283,7 @@ function buildCard(vinyl) {
     priceRow.className = 'card-price-row';
     const priceBadge = document.createElement('span');
     priceBadge.className = 'price-badge';
-    priceBadge.textContent = vinyl.price ? `S/. ${vinyl.price.toFixed(2).replace('.', ',')}` : 'Consultar';
+    priceBadge.textContent = vinyl.price ? `S/. ${vinyl.price}` : 'Consultar';
     priceRow.appendChild(priceBadge);
     if (vinyl.edition) {
         const ed = document.createElement('span');
@@ -373,7 +373,7 @@ function openModal(vinyl) {
     mArtist.textContent = vinyl.artist;
     mAlbum.textContent = vinyl.album;
     mVersion.textContent = vinyl.version;
-    mPrice.textContent = vinyl.price ? `S/. ${vinyl.price.toFixed(2).replace('.', ',')}` : 'Consultar precio';
+    mPrice.textContent = vinyl.price ? `S/. ${vinyl.price}` : 'Consultar precio';
     mEdition.textContent = vinyl.edition || '';
     mEdition.style.display = vinyl.edition ? '' : 'none';
     mGenres.innerHTML = '';
