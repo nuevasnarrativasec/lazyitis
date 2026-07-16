@@ -9,36 +9,37 @@ function parsePrice(raw) {
     // Si no tiene decimales, el número completo es el precio en soles
     return parseInt(s.replace(/[^\d]/g, '')) || 0;
 }
-
+ 
 // ─── CONFIG ─────────────────────────────────────────────────────────────
 // ⚠️  Reemplaza con el número de WhatsApp de Lazyitis (formato: 51XXXXXXXXX)
 const WA_NUMBER  = '51999999999';
 const FB_PAGE    = 'lazyitisdiscos'; // ⚠️ Reemplaza con el usuario de la página de Facebook
-
+ 
 // URL pública del Google Sheet publicado como CSV
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRCte-LDumP7yTYAlTr1uw6s01GfSx_l-_f0s0vr4QuvX_o0hgOXB3oErX6k3MqJbXbHewjs38CZb2i/pub?gid=1534600788&single=true&output=csv';
 // ────────────────────────────────────────────────────────────────────────
-
+ 
 // Mapeo de columnas de género (índice en el CSV → etiqueta visible)
+// Debe coincidir en orden y nombre con las columnas de género de la hoja (col. 8–23).
 const GENRE_COLS = [
-    { idx: 8,  label: 'Rock Pop' },
-    { idx: 9,  label: 'Indie / Alternativo' },
+    { idx: 8,  label: 'Pop' },
+    { idx: 9,  label: 'Indie Alternativo' },
     { idx: 10, label: 'Jazz' },
-    { idx: 11, label: 'Reggae' },
-    { idx: 12, label: 'Folk / Country Blues' },
-    { idx: 13, label: 'New Wave' },
-    { idx: 14, label: 'Rock Pop Español' },
-    { idx: 15, label: 'Salsa' },
-    { idx: 16, label: 'Cumbia / Tropical' },
-    { idx: 17, label: 'R&B / Soul' },
-    { idx: 18, label: 'Vinilos de Época' },
-    { idx: 19, label: 'Electronic Dance' },
+    { idx: 11, label: 'Pop Rock' },
+    { idx: 12, label: 'Rock Clásico / Progresivo' },
+    { idx: 13, label: 'Soundtracks' },
+    { idx: 14, label: 'Rock / Pop Latino' },
+    { idx: 15, label: 'New Wave' },
+    { idx: 16, label: 'R&B / Soul / Blues' },
+    { idx: 17, label: 'Salsa / Cumbia' },
+    { idx: 18, label: 'Punk / Hardcore' },
+    { idx: 19, label: 'Electronic / Dance' },
     { idx: 20, label: 'Hip Hop / Rap' },
     { idx: 21, label: 'Hard Rock / Metal' },
-    { idx: 22, label: 'Rock / Clásico / Prog.' },
-    { idx: 23, label: 'Etiqueta Pendiente' },  // ⚠️ Nombre temporal — actualizar cuando cliente confirme
+    { idx: 22, label: 'Folk / Country / Reggae' },
+    { idx: 23, label: 'Artículos / Merch' },
 ];
-
+ 
 // ─── CSV PARSER ──────────────────────────────────────────────────────────
 function parseCSV(text) {
     const rows = [];
@@ -59,7 +60,7 @@ function parseCSV(text) {
     if (field || row.length) { row.push(field); rows.push(row); }
     return rows;
 }
-
+ 
 // ─── DRIVE URL CONVERTER ─────────────────────────────────────────────────
 // Convierte cualquier URL de Google Drive al formato de imagen directa.
 // Acepta: /file/d/ID/view, /open?id=ID, /uc?id=ID, thumbnails, etc.
@@ -71,7 +72,7 @@ function driveUrl(url) {
     if (!id) return url;
     return `https://lh3.googleusercontent.com/d/${id}`;
 }
-
+ 
 // ─── CATALOG LOADER ──────────────────────────────────────────────────────
 async function loadCatalog() {
     const res  = await fetch(CSV_URL);
@@ -103,9 +104,9 @@ async function loadCatalog() {
     }
     return catalog;
 }
-
+ 
 let CATALOG = [];
-
+ 
 // ─── PALETTE for placeholders ──────────────────────────────────────────
 const PALETTES = [
     ['#1a1a2e', '#e94560'],
@@ -124,35 +125,35 @@ const PALETTES = [
     ['#2f3640', '#e84393'],
     ['#192a56', '#00a8ff'],
 ];
-
+ 
 function palette(str) {
     let h = 0;
     for (let c of str) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
     return PALETTES[Math.abs(h) % PALETTES.length];
 }
-
+ 
 function initials(str) {
     return str.split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
 }
-
+ 
 // ─── GENRES ────────────────────────────────────────────────────────────
 const GENRES = [
-    'Novedades', 'Rock Pop', 'Indie / Alternativo', 'Jazz', 'Reggae',
-    'Folk / Country Blues', 'New Wave', 'Rock Pop Español', 'Salsa',
-    'Cumbia / Tropical', 'R&B / Soul', 'Vinilos de Época', 'Electronic Dance',
-    'Hip Hop / Rap', 'Hard Rock / Metal', 'Rock / Clásico / Prog.',
-    'Etiqueta Pendiente',  // ⚠️ Nombre temporal — actualizar cuando cliente confirme
+    'Novedades', 'Pop', 'Indie Alternativo', 'Jazz', 'Pop Rock',
+    'Rock Clásico / Progresivo', 'Soundtracks', 'Rock / Pop Latino', 'New Wave',
+    'R&B / Soul / Blues', 'Salsa / Cumbia', 'Punk / Hardcore', 'Electronic / Dance',
+    'Hip Hop / Rap', 'Hard Rock / Metal', 'Folk / Country / Reggae',
+    'Artículos / Merch',
     'Catálogo Completo'
 ];
 let activeGenre = 'Novedades';
 let genreBeforeSearch = 'Novedades'; // restores on clear
 let searchQuery = '';
-
+ 
 // Build genre buttons
 const genreList        = document.getElementById('genreList');
 const genresToggle     = document.getElementById('genresToggle');
 const genresToggleLabel = document.getElementById('genresToggleLabel');
-
+ 
 GENRES.forEach(g => {
     const btn = document.createElement('button');
     btn.className = 'genre-btn' + (g === activeGenre ? ' active' : '');
@@ -168,19 +169,19 @@ GENRES.forEach(g => {
     });
     genreList.appendChild(btn);
 });
-
+ 
 genresToggle.addEventListener('click', () => {
     genreList.classList.toggle('open');
     genresToggle.classList.toggle('open');
 });
-
+ 
 function setActiveGenreUI(g) {
     document.querySelectorAll('.genre-btn').forEach(b => b.classList.toggle('active', b.dataset.genre === g));
     genresToggleLabel.textContent = g;
     genreList.classList.remove('open');
     genresToggle.classList.remove('open');
 }
-
+ 
 // ─── SEARCH ────────────────────────────────────────────────────────────
 const searchInput = document.getElementById('searchInput');
 searchInput.addEventListener('input', () => {
@@ -196,7 +197,7 @@ searchInput.addEventListener('input', () => {
     }
     render();
 });
-
+ 
 // ─── COVER PLACEHOLDER ─────────────────────────────────────────────────
 function buildCoverPlaceholder(vinyl, forModal = false) {
     const [bg, fg] = palette(vinyl.artist + vinyl.album);
@@ -214,7 +215,7 @@ function buildCoverPlaceholder(vinyl, forModal = false) {
         div.appendChild(alb);
     return div;
 }
-
+ 
 // ─── CONTACT LINKS ─────────────────────────────────────────────────────
 function waLink(vinyl) {
     const coverLine = vinyl.image ? ` \n Portada: ${vinyl.image}` : '';
@@ -225,16 +226,16 @@ function messengerLink(vinyl) {
     const msg = `Hola! Me interesa el vinilo: ${vinyl.artist} — ${vinyl.album} (${vinyl.version})${vinyl.edition ? ` / ${vinyl.edition}` : ''}. ¿Está disponible?`;
     return `https://m.me/${FB_PAGE}?text=${encodeURIComponent(msg)}`;
 }
-
+ 
 // ─── RENDER ────────────────────────────────────────────────────────────
 const PAGE_SIZE = 75;
 let visibleCount = 0;
-
+ 
 const catalogEl = document.getElementById('catalog');
 const countEl    = document.getElementById('countNum');
 const countLabel = document.getElementById('countLabel');
 const sentinel  = document.getElementById('sentinel');
-
+ 
 function filtered() {
     return CATALOG.filter(v => {
         let matchGenre;
@@ -250,16 +251,16 @@ function filtered() {
         return matchGenre && matchSearch;
     });
 }
-
+ 
 function buildCard(vinyl) {
     const card = document.createElement('div');
     card.className = vinyl.pronto ? 'card card--pronto' : 'card';
     if (!vinyl.pronto) card.addEventListener('click', () => openModal(vinyl));
-
+ 
     const artist = document.createElement('p');
     artist.className = 'card-artist';
     artist.textContent = vinyl.artist;
-
+ 
     const coverWrap = document.createElement('div');
     coverWrap.className = 'card-cover';
     if (vinyl.image) {
@@ -271,14 +272,14 @@ function buildCard(vinyl) {
     } else {
         coverWrap.appendChild(buildCoverPlaceholder(vinyl));
     }
-
+ 
     const album = document.createElement('p');
     album.className = 'card-album';
     album.innerHTML = `${vinyl.album} <span class="version">(${vinyl.version})</span>`;
-
+ 
     const footer = document.createElement('div');
     footer.className = 'card-footer';
-
+ 
     const priceRow = document.createElement('div');
     priceRow.className = 'card-price-row';
     const priceBadge = document.createElement('span');
@@ -292,25 +293,25 @@ function buildCard(vinyl) {
         priceRow.appendChild(ed);
     }
     footer.appendChild(priceRow);
-
+ 
     const cardInner = document.createElement('div');
     cardInner.className = 'card-inner';
     cardInner.appendChild(album);
     cardInner.appendChild(coverWrap);
     cardInner.appendChild(footer);
-
+ 
     if (vinyl.pronto) {
         const bar = document.createElement('div');
         bar.className = 'pronto-bar';
         bar.textContent = 'Pronto en Stock';
         cardInner.appendChild(bar);
     }
-
+ 
     card.appendChild(artist);
     card.appendChild(cardInner);
     return card;
 }
-
+ 
 function appendBatch(items) {
     const end = Math.min(visibleCount + PAGE_SIZE, items.length);
     const frag = document.createDocumentFragment();
@@ -319,7 +320,7 @@ function appendBatch(items) {
     visibleCount = end;
     sentinel.style.display = visibleCount < items.length ? 'block' : 'none';
 }
-
+ 
 function render() {
     const items = filtered();
     countEl.textContent = items.length;
@@ -327,7 +328,7 @@ function render() {
     catalogEl.innerHTML = '';
     visibleCount = 0;
     sentinel.style.display = 'none';
-
+ 
     if (!items.length) {
         const empty = document.createElement('div');
         empty.className = 'empty-state';
@@ -338,16 +339,16 @@ function render() {
         catalogEl.appendChild(empty);
         return;
     }
-
+ 
     appendBatch(items);
 }
-
+ 
 // ─── INFINITE SCROLL ───────────────────────────────────────────────────
 const scrollObserver = new IntersectionObserver(entries => {
     if (entries[0].isIntersecting) appendBatch(filtered());
 }, { rootMargin: '300px' });
 scrollObserver.observe(sentinel);
-
+ 
 // ─── MODAL ─────────────────────────────────────────────────────────────
 const backdrop = document.getElementById('modalBackdrop');
 const mClose = document.getElementById('modalClose');
@@ -359,7 +360,7 @@ const mPrice = document.getElementById('modalPrice');
 const mEdition = document.getElementById('modalEdition');
 const mGenres = document.getElementById('modalGenres');
 const mActions = document.getElementById('modalActions');
-
+ 
 function openModal(vinyl) {
     mCover.innerHTML = '';
     if (vinyl.image) {
@@ -383,7 +384,7 @@ function openModal(vinyl) {
         tag.textContent = g;
         mGenres.appendChild(tag);
     });
-
+ 
     // Build action buttons
     mActions.innerHTML = '';
     const mActionsLabel = document.createElement('p');
@@ -392,7 +393,7 @@ function openModal(vinyl) {
     mActions.appendChild(mActionsLabel);
     const btnsRow = document.createElement('div');
     btnsRow.className = 'modal-actions-btns';
-
+ 
     const wa = document.createElement('a');
     wa.className = 'modal-btn modal-btn--wa';
     wa.href = waLink(vinyl);
@@ -400,7 +401,7 @@ function openModal(vinyl) {
     wa.rel = 'noopener';
     wa.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.527 5.847L.057 23.885c-.073.271.175.52.446.447l6.04-1.47A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.897 0-3.67-.518-5.193-1.421l-.372-.22-3.862.94.96-3.862-.242-.385A9.953 9.953 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>WhatsApp`;
     btnsRow.appendChild(wa);
-
+ 
     const ms = document.createElement('a');
     ms.className = 'modal-btn modal-btn--ms';
     ms.href = messengerLink(vinyl);
@@ -408,18 +409,18 @@ function openModal(vinyl) {
     ms.rel = 'noopener';
     ms.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.186 0 11.581c0 3.644 1.826 6.884 4.688 9.014V24l4.274-2.342c1.141.315 2.351.486 3.607.486 6.627 0 12-5.186 12-11.581S18.627 0 12 0zm1.19 15.593l-3.057-3.26-5.964 3.26 6.559-6.97 3.132 3.26 5.889-3.26-6.559 6.97z"/></svg>Messenger`;
     btnsRow.appendChild(ms);
-
+ 
     mActions.appendChild(btnsRow);
-
+ 
     backdrop.classList.add('open');
     document.body.style.overflow = 'hidden';
 }
-
+ 
 function closeModal() {
     backdrop.classList.remove('open');
     document.body.style.overflow = '';
 }
-
+ 
 mClose.addEventListener('click', closeModal);
 backdrop.addEventListener('click', e => {
     if (e.target === backdrop) closeModal();
@@ -427,9 +428,9 @@ backdrop.addEventListener('click', e => {
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeModal();
 });
-
+ 
 catalogEl.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando catálogo…</p></div>';
-
+ 
 loadCatalog()
     .then(data => {
         CATALOG = data;
