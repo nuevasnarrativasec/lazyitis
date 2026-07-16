@@ -19,28 +19,46 @@ const FB_PAGE    = 'lazyitisdiscos'; // ⚠️ Reemplaza con el usuario de la p�
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRCte-LDumP7yTYAlTr1uw6s01GfSx_l-_f0s0vr4QuvX_o0hgOXB3oErX6k3MqJbXbHewjs38CZb2i/pub?gid=1534600788&single=true&output=csv';
 // ────────────────────────────────────────────────────────────────────────
  
-// Mapeo de columnas de género (índice en el CSV → etiqueta visible)
-// Debe coincidir en orden y nombre con las columnas de género de la hoja (col. L–AA = idx 11–26).
-// NOTA: el bloque Estado (Pronto/Disponible/Notas) se movió a las columnas H–J,
-// por eso los géneros ahora arrancan en el índice 11.
-const GENRE_COLS = [
-    { idx: 11, label: 'Pop' },
-    { idx: 12, label: 'Indie Alternativo' },
-    { idx: 13, label: 'Jazz' },
-    { idx: 14, label: 'Pop Rock' },
-    { idx: 15, label: 'Rock Clásico / Progresivo' },
-    { idx: 16, label: 'Soundtracks' },
-    { idx: 17, label: 'Rock / Pop Latino' },
-    { idx: 18, label: 'New Wave' },
-    { idx: 19, label: 'R&B / Soul / Blues' },
-    { idx: 20, label: 'Salsa / Cumbia' },
-    { idx: 21, label: 'Punk / Hardcore' },
-    { idx: 22, label: 'Electronic / Dance' },
-    { idx: 23, label: 'Hip Hop / Rap' },
-    { idx: 24, label: 'Hard Rock / Metal' },
-    { idx: 25, label: 'Folk / Country / Reggae' },
-    { idx: 26, label: 'Artículos / Merch' },
+// ─── COLUMNAS POR NOMBRE (no por posición) ───────────────────────────────
+// El sitio ya NO depende del orden de las columnas en la hoja: cada columna se
+// resuelve emparejando el NOMBRE de su encabezado (fila 2 de la hoja). Así el
+// cliente puede mover/reordenar columnas libremente sin romper nada ni tocar
+// este archivo. Lo único que debe mantenerse es el TEXTO de los encabezados.
+
+// Nombres de encabezado tal como están en la hoja (fila 2). Si renombras un
+// encabezado en la hoja, actualiza el texto aquí también.
+const COL_NAMES = {
+    id:        'ID',
+    artist:    'Artista / Banda',
+    album:     'Nombre del Vinilo',
+    version:   'Versión',
+    image:     'URL Portada (Drive)',
+    price:     'Precio (S/)',
+    edition:   'Tipo de Edición',
+    novedad:   'Novedades',
+    pronto:    'Pronto en Stock',
+    available: 'Disponible (uso interno)',
+};
+
+// Etiquetas de género en el ORDEN en que se muestran los botones de filtro.
+// Cada una se empareja con el encabezado del mismo nombre en la hoja.
+const GENRE_LABELS = [
+    'Pop', 'Indie Alternativo', 'Jazz', 'Pop Rock', 'Rock Clásico / Progresivo',
+    'Soundtracks', 'Rock / Pop Latino', 'New Wave', 'R&B / Soul / Blues',
+    'Salsa / Cumbia', 'Punk / Hardcore', 'Electronic / Dance', 'Hip Hop / Rap',
+    'Hard Rock / Metal', 'Folk / Country / Reggae', 'Artículos / Merch',
 ];
+
+// Normaliza un encabezado/etiqueta para emparejar por NOMBRE de forma tolerante:
+// sin acentos, en minúsculas y con saltos de línea/espacios múltiples colapsados.
+// (P. ej. el encabezado "Disponible\n(uso interno)" o "Electronic /  Dance".)
+function normHeader(s) {
+    return (s == null ? '' : String(s))
+        .normalize('NFD').replace(/[̀-ͯ]/g, '') // quita acentos
+        .toLowerCase()
+        .replace(/\s+/g, ' ')                              // colapsa \n y espacios
+        .trim();
+}
  
 // ─── CSV PARSER ──────────────────────────────────────────────────────────
 function parseCSV(text) {
@@ -81,26 +99,45 @@ async function loadCatalog() {
     const text = await res.text();
     const rows = parseCSV(text);
     // Fila 0: cabeceras de sección (ignorar)
-    // Fila 1: nombres de columnas (ignorar, usamos índices fijos)
+    // Fila 1: nombres de columnas → de aquí resolvemos las columnas POR NOMBRE
     // Fila 2+: datos
+    if (rows.length < 2) return [];
+
+    // Índice de encabezados normalizados → posición de columna.
+    const headerRow = rows[1].map(normHeader);
+    const colOf = (name) => headerRow.indexOf(normHeader(name));
+
+    // Resuelve una sola vez la posición de cada columna con nombre.
+    const C = {};
+    for (const key in COL_NAMES) C[key] = colOf(COL_NAMES[key]);
+
+    // Resuelve las columnas de género (las que no aparezcan en la hoja se ignoran).
+    const genreCols = GENRE_LABELS
+        .map(label => ({ label, idx: colOf(label) }))
+        .filter(g => g.idx !== -1);
+
+    // Lee una celda por nombre de columna de forma segura.
+    const cell = (r, key) => (C[key] !== -1 ? (r[C[key]] || '') : '');
+
     const catalog = [];
     for (let i = 2; i < rows.length; i++) {
         const r = rows[i];
-        if (!r[0] || !r[0].trim()) continue; // fila vacía
-        const available = r[8] === 'SÍ';    // col I — Disponible (uso interno)
-        const pronto    = r[7] === 'SÍ';    // col H — Pronto en Stock
+        const id = String(cell(r, 'id')).trim();
+        if (!id) continue;                                  // fila sin ID = vacía
+        const available = cell(r, 'available') === 'SÍ';
+        const pronto    = cell(r, 'pronto')    === 'SÍ';
         if (!available && !pronto) continue;
-        const genres = GENRE_COLS.filter(g => r[g.idx] === 'SÍ').map(g => g.label);
+        const genres = genreCols.filter(g => r[g.idx] === 'SÍ').map(g => g.label);
         catalog.push({
-            id:      parseInt(r[0]) || 0,
-            artist:  (r[1] || '').trim(),
-            album:   (r[2] || '').trim(),
-            version: (r[3] || '').trim(),
-            image:   driveUrl((r[4] || '').trim()),
-            price:   parsePrice(r[5]),
-            edition: (r[6] || '').trim(),
+            id:      parseInt(id) || 0,
+            artist:  String(cell(r, 'artist')).trim(),
+            album:   String(cell(r, 'album')).trim(),
+            version: String(cell(r, 'version')).trim(),
+            image:   driveUrl(String(cell(r, 'image')).trim()),
+            price:   parsePrice(cell(r, 'price')),
+            edition: String(cell(r, 'edition')).trim(),
             pronto,
-            novedad: r[10] === 'SÍ',        // col K — Novedades (se corrió a la der. al mover el bloque Estado)
+            novedad: cell(r, 'novedad') === 'SÍ',
             genres,
         });
     }
@@ -139,14 +176,9 @@ function initials(str) {
 }
  
 // ─── GENRES ────────────────────────────────────────────────────────────
-const GENRES = [
-    'Novedades', 'Pop', 'Indie Alternativo', 'Jazz', 'Pop Rock',
-    'Rock Clásico / Progresivo', 'Soundtracks', 'Rock / Pop Latino', 'New Wave',
-    'R&B / Soul / Blues', 'Salsa / Cumbia', 'Punk / Hardcore', 'Electronic / Dance',
-    'Hip Hop / Rap', 'Hard Rock / Metal', 'Folk / Country / Reggae',
-    'Artículos / Merch',
-    'Catálogo Completo'
-];
+// Botones de filtro: "Novedades" + los géneros (misma lista/orden que arriba)
+// + "Catálogo Completo". Un solo lugar donde mantener los géneros: GENRE_LABELS.
+const GENRES = ['Novedades', ...GENRE_LABELS, 'Catálogo Completo'];
 let activeGenre = 'Novedades';
 let genreBeforeSearch = 'Novedades'; // restores on clear
 let searchQuery = '';
