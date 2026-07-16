@@ -389,7 +389,7 @@ function openModal(vinyl) {
     mActions.innerHTML = '';
     const mActionsLabel = document.createElement('p');
     mActionsLabel.className = 'modal-actions-label';
-    mActionsLabel.textContent = 'Pide tu disco aquí';
+    mActionsLabel.textContent = 'Pide tu vinilo a través de:';
     mActions.appendChild(mActionsLabel);
     const btnsRow = document.createElement('div');
     btnsRow.className = 'modal-actions-btns';
