@@ -20,24 +20,26 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRCte-LDumP7yTY
 // ────────────────────────────────────────────────────────────────────────
  
 // Mapeo de columnas de género (índice en el CSV → etiqueta visible)
-// Debe coincidir en orden y nombre con las columnas de género de la hoja (col. 8–23).
+// Debe coincidir en orden y nombre con las columnas de género de la hoja (col. L–AA = idx 11–26).
+// NOTA: el bloque Estado (Pronto/Disponible/Notas) se movió a las columnas H–J,
+// por eso los géneros ahora arrancan en el índice 11.
 const GENRE_COLS = [
-    { idx: 8,  label: 'Pop' },
-    { idx: 9,  label: 'Indie Alternativo' },
-    { idx: 10, label: 'Jazz' },
-    { idx: 11, label: 'Pop Rock' },
-    { idx: 12, label: 'Rock Clásico / Progresivo' },
-    { idx: 13, label: 'Soundtracks' },
-    { idx: 14, label: 'Rock / Pop Latino' },
-    { idx: 15, label: 'New Wave' },
-    { idx: 16, label: 'R&B / Soul / Blues' },
-    { idx: 17, label: 'Salsa / Cumbia' },
-    { idx: 18, label: 'Punk / Hardcore' },
-    { idx: 19, label: 'Electronic / Dance' },
-    { idx: 20, label: 'Hip Hop / Rap' },
-    { idx: 21, label: 'Hard Rock / Metal' },
-    { idx: 22, label: 'Folk / Country / Reggae' },
-    { idx: 23, label: 'Artículos / Merch' },
+    { idx: 11, label: 'Pop' },
+    { idx: 12, label: 'Indie Alternativo' },
+    { idx: 13, label: 'Jazz' },
+    { idx: 14, label: 'Pop Rock' },
+    { idx: 15, label: 'Rock Clásico / Progresivo' },
+    { idx: 16, label: 'Soundtracks' },
+    { idx: 17, label: 'Rock / Pop Latino' },
+    { idx: 18, label: 'New Wave' },
+    { idx: 19, label: 'R&B / Soul / Blues' },
+    { idx: 20, label: 'Salsa / Cumbia' },
+    { idx: 21, label: 'Punk / Hardcore' },
+    { idx: 22, label: 'Electronic / Dance' },
+    { idx: 23, label: 'Hip Hop / Rap' },
+    { idx: 24, label: 'Hard Rock / Metal' },
+    { idx: 25, label: 'Folk / Country / Reggae' },
+    { idx: 26, label: 'Artículos / Merch' },
 ];
  
 // ─── CSV PARSER ──────────────────────────────────────────────────────────
@@ -85,8 +87,8 @@ async function loadCatalog() {
     for (let i = 2; i < rows.length; i++) {
         const r = rows[i];
         if (!r[0] || !r[0].trim()) continue; // fila vacía
-        const available = r[25] === 'SÍ';   // col Z — Disponible (uso interno)
-        const pronto    = r[24] === 'SÍ';   // col Y — Pronto en Stock
+        const available = r[8] === 'SÍ';    // col I — Disponible (uso interno)
+        const pronto    = r[7] === 'SÍ';    // col H — Pronto en Stock
         if (!available && !pronto) continue;
         const genres = GENRE_COLS.filter(g => r[g.idx] === 'SÍ').map(g => g.label);
         catalog.push({
@@ -98,7 +100,7 @@ async function loadCatalog() {
             price:   parsePrice(r[5]),
             edition: (r[6] || '').trim(),
             pronto,
-            novedad: r[7] === 'SÍ',         // col H — Novedades (columna Novedad eliminada, usamos ésta)
+            novedad: r[10] === 'SÍ',        // col K — Novedades (se corrió a la der. al mover el bloque Estado)
             genres,
         });
     }
