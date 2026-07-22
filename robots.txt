@@ -1,0 +1,14 @@
+# robots.txt — Lazyitis Discos
+#
+# ⚠️ EN DESARROLLO: mientras el sitio no sea público, se bloquea todo.
+# Cuando lances la web, BORRA las 2 líneas "Disallow: /" de abajo
+# y quita el <meta name="robots" content="noindex"> del index.html.
+
+User-agent: *
+Disallow: /
+
+# --- Configuración para cuando el sitio sea público (descomentar) ---
+# User-agent: *
+# Allow: /
+
+Sitemap: https://lazyitisdiscos.com.pe/sitemap.xml

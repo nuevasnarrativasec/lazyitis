@@ -12,7 +12,7 @@ function parsePrice(raw) {
  
 // ─── CONFIG ─────────────────────────────────────────────────────────────
 // ⚠️  Reemplaza con el número de WhatsApp de Lazyitis (formato: 51XXXXXXXXX)
-const WA_NUMBER  = '51999999999';
+const WA_NUMBER  = '51969009619';
 const FB_PAGE    = 'lazyitisdiscos'; // ⚠️ Reemplaza con el usuario de la página de Facebook
  
 // URL pública del Google Sheet publicado como CSV
@@ -90,7 +90,10 @@ function driveUrl(url) {
     const m = url.match(/\/d\/([a-zA-Z0-9_-]{10,})/);   // extrae ID de /file/d/ID/
     const id = m ? m[1] : (url.match(/[?&]id=([a-zA-Z0-9_-]{10,})/) || [])[1];
     if (!id) return url;
-    return `https://lh3.googleusercontent.com/d/${id}`;
+    // `=w600` pide a Google una versión REDIMENSIONADA (no la original de varios MB).
+    // Las portadas se muestran a ~200-270px; w600 cubre pantallas retina y pesa
+    // 10-20x menos, acelerando mucho la carga de la grilla.
+    return `https://lh3.googleusercontent.com/d/${id}=w600`;
 }
  
 // ─── CATALOG LOADER ──────────────────────────────────────────────────────
@@ -286,7 +289,7 @@ function filtered() {
     });
 }
  
-function buildCard(vinyl) {
+function buildCard(vinyl, index = 99) {
     const card = document.createElement('div');
     card.className = vinyl.pronto ? 'card card--pronto' : 'card';
     if (!vinyl.pronto) card.addEventListener('click', () => openModal(vinyl));
@@ -301,7 +304,10 @@ function buildCard(vinyl) {
         const img = document.createElement('img');
         img.src = vinyl.image;
         img.alt = `${vinyl.artist} – ${vinyl.album}`;
-        img.loading = 'lazy';
+        // Las primeras portadas (visibles al entrar) cargan de inmediato;
+        // el resto en diferido para no saturar la red al inicio.
+        img.loading = index < 14 ? 'eager' : 'lazy';
+        img.decoding = 'async';
         coverWrap.appendChild(img);
     } else {
         coverWrap.appendChild(buildCoverPlaceholder(vinyl));
@@ -349,7 +355,7 @@ function buildCard(vinyl) {
 function appendBatch(items) {
     const end = Math.min(visibleCount + PAGE_SIZE, items.length);
     const frag = document.createDocumentFragment();
-    items.slice(visibleCount, end).forEach(v => frag.appendChild(buildCard(v)));
+    items.slice(visibleCount, end).forEach((v, i) => frag.appendChild(buildCard(v, visibleCount + i)));
     catalogEl.appendChild(frag);
     visibleCount = end;
     sentinel.style.display = visibleCount < items.length ? 'block' : 'none';
