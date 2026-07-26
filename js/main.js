@@ -179,9 +179,17 @@ function initials(str) {
 }
  
 // ─── GENRES ────────────────────────────────────────────────────────────
-// Botones de filtro: "Novedades" + los géneros (misma lista/orden que arriba)
-// + "Catálogo Completo". Un solo lugar donde mantener los géneros: GENRE_LABELS.
-const GENRES = ['Novedades', ...GENRE_LABELS, 'Catálogo Completo'];
+// Botones de filtro: "Novedades" + los géneros (misma lista/orden que arriba).
+// "Catálogo Completo" se inserta justo antes de "Salsa / Cumbia" para que en
+// DESKTOP quede en la 2ª fila, debajo de "Novedades". En MÓVIL se recoloca a la
+// 2ª posición del desplegable con CSS (ver `order` en @media max-width:600px).
+// Un solo lugar donde mantener los géneros: GENRE_LABELS.
+const GENRES = (() => {
+    const list = ['Novedades', ...GENRE_LABELS];
+    const salsaIdx = list.indexOf('Salsa / Cumbia');
+    list.splice(salsaIdx >= 0 ? salsaIdx : list.length, 0, 'Catálogo Completo');
+    return list;
+})();
 let activeGenre = 'Novedades';
 let genreBeforeSearch = 'Novedades'; // restores on clear
 let searchQuery = '';

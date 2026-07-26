@@ -529,6 +529,10 @@
     }
     .genres.open { display: flex; }
     .genre-btn { text-align: left; }
+    /* En móvil "Catálogo Completo" va 2º, justo debajo de "Novedades".
+       (En desktop el orden lo da el array GENRES en main.js.) */
+    .genre-btn[data-genre="Novedades"] { order: -2; }
+    .genre-btn[data-genre="Catálogo Completo"] { order: -1; }
     .genre-btn.active {
       border-left: 3px solid var(--orange);
     }
