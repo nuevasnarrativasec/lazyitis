@@ -375,10 +375,23 @@ function appendBatch(items) {
 function render() {
     const items = filtered();
     countEl.textContent = items.length;
-    const isMerch = activeGenre === 'Artículos / Merch';
-    const isCds = activeGenre === 'CDS';
-    const singular = isCds ? 'CD' : isMerch ? 'artículo' : 'vinilo';
-    const plural = isCds ? 'CDs' : isMerch ? 'artículos' : 'vinilos';
+    // Etiqueta del contador según la NATURALEZA de los resultados mostrados:
+    //  - Vista de todo el catálogo (sin búsqueda): "discos" (término paraguas).
+    //  - Un solo tipo: "discos" (vinilos), "CDs" o "artículos" (merch).
+    //  - Mezcla de tipos (p. ej. vinilo + merch de un mismo artista): "artículos".
+    const typeOf = (v) => v.genres.includes('Artículos / Merch') ? 'merch'
+                        : v.genres.includes('CDS') ? 'cd' : 'disco';
+    let singular = 'disco', plural = 'discos';
+    if (!(activeGenre === 'Catálogo Completo' && !searchQuery)) {
+        const types = new Set(items.map(typeOf));
+        if (types.size > 1) {
+            singular = 'artículo'; plural = 'artículos';
+        } else if (types.size === 1) {
+            const t = [...types][0];
+            if (t === 'merch') { singular = 'artículo'; plural = 'artículos'; }
+            else if (t === 'cd') { singular = 'CD'; plural = 'CDs'; }
+        }
+    }
     countLabel.textContent = items.length === 1 ? singular : plural;
     catalogEl.innerHTML = '';
     visibleCount = 0;
