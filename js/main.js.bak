@@ -47,7 +47,6 @@ const GENRE_LABELS = [
     'Soundtracks', 'Rock / Pop Latino', 'New Wave', 'R&B / Soul / Blues',
     'Salsa / Cumbia', 'Punk / Hardcore', 'Electronic / Dance', 'Hip Hop / Rap',
     'Hard Rock / Metal', 'Folk / Country / Reggae', 'Artículos / Merch',
-    'CDS',
 ];
 
 // Normaliza un encabezado/etiqueta para emparejar por NOMBRE de forma tolerante:
@@ -141,7 +140,6 @@ async function loadCatalog() {
             price:   parsePrice(cell(r, 'price')),
             edition: String(cell(r, 'edition')).trim(),
             pronto,
-            available,
             novedad: cell(r, 'novedad') === 'SÍ',
             genres,
         });
@@ -186,9 +184,14 @@ function initials(str) {
 // DESKTOP quede en la 2ª fila, debajo de "Novedades". En MÓVIL se recoloca a la
 // 2ª posición del desplegable con CSS (ver `order` en @media max-width:600px).
 // Un solo lugar donde mantener los géneros: GENRE_LABELS.
-const GENRES = ['Catálogo Completo', 'Novedades', ...GENRE_LABELS];
-let activeGenre = 'Catálogo Completo';
-let genreBeforeSearch = 'Catálogo Completo'; // restores on clear
+const GENRES = (() => {
+    const list = ['Novedades', ...GENRE_LABELS];
+    const salsaIdx = list.indexOf('Salsa / Cumbia');
+    list.splice(salsaIdx >= 0 ? salsaIdx : list.length, 0, 'Catálogo Completo');
+    return list;
+})();
+let activeGenre = 'Novedades';
+let genreBeforeSearch = 'Novedades'; // restores on clear
 let searchQuery = '';
  
 // Build genre buttons
@@ -199,13 +202,7 @@ const genresToggleLabel = document.getElementById('genresToggleLabel');
 GENRES.forEach(g => {
     const btn = document.createElement('button');
     btn.className = 'genre-btn' + (g === activeGenre ? ' active' : '');
-    if (g === 'Catálogo Completo') {
-        // En desktop se ve "Catálogo Completo"; en móvil "Filtrar por estilo" (CSS).
-        btn.innerHTML = '<span class="lbl-full">Catálogo Completo</span>' +
-                        '<span class="lbl-mobile">Filtrar por estilo</span>';
-    } else {
-        btn.textContent = g;
-    }
+    btn.textContent = g;
     btn.dataset.genre = g;
     btn.addEventListener('click', () => {
         activeGenre = g;
@@ -225,8 +222,7 @@ genresToggle.addEventListener('click', () => {
  
 function setActiveGenreUI(g) {
     document.querySelectorAll('.genre-btn').forEach(b => b.classList.toggle('active', b.dataset.genre === g));
-    // El acordeón (solo móvil) muestra "Filtrar por estilo" para el catálogo completo.
-    genresToggleLabel.textContent = (g === 'Catálogo Completo') ? 'Filtrar por estilo' : g;
+    genresToggleLabel.textContent = g;
     genreList.classList.remove('open');
     genresToggle.classList.remove('open');
 }
@@ -377,9 +373,8 @@ function render() {
     const items = filtered();
     countEl.textContent = items.length;
     const isMerch = activeGenre === 'Artículos / Merch';
-    const isCds = activeGenre === 'CDS';
-    const singular = isCds ? 'CD' : isMerch ? 'artículo' : 'vinilo';
-    const plural = isCds ? 'CDs' : isMerch ? 'artículos' : 'vinilos';
+    const singular = isMerch ? 'artículo' : 'vinilo';
+    const plural = isMerch ? 'artículos' : 'vinilos';
     countLabel.textContent = items.length === 1 ? singular : plural;
     catalogEl.innerHTML = '';
     visibleCount = 0;
@@ -490,9 +485,6 @@ catalogEl.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>
 loadCatalog()
     .then(data => {
         CATALOG = data;
-        // Total de discos EN STOCK = disponibles ahora (excluye "Pronto en Stock").
-        const stockEl = document.getElementById('stockNum');
-        if (stockEl) stockEl.textContent = CATALOG.filter(v => v.available).length;
         render();
     })
     .catch(() => {
