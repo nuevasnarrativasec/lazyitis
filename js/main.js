@@ -372,7 +372,10 @@ function appendBatch(items) {
 function render() {
     const items = filtered();
     countEl.textContent = items.length;
-    countLabel.textContent = items.length === 1 ? 'vinilo' : 'vinilos';
+    const isMerch = activeGenre === 'Artículos / Merch';
+    const singular = isMerch ? 'artículo' : 'vinilo';
+    const plural = isMerch ? 'artículos' : 'vinilos';
+    countLabel.textContent = items.length === 1 ? singular : plural;
     catalogEl.innerHTML = '';
     visibleCount = 0;
     sentinel.style.display = 'none';
