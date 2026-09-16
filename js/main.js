@@ -43,11 +43,11 @@ const COL_NAMES = {
 // Etiquetas de género en el ORDEN en que se muestran los botones de filtro.
 // Cada una se empareja con el encabezado del mismo nombre en la hoja.
 const GENRE_LABELS = [
+    'CDS',
     'Pop', 'Indie Alternativo', 'Jazz', 'Pop Rock', 'Rock Clásico / Progresivo',
     'Soundtracks', 'Rock / Pop Latino', 'New Wave', 'R&B / Soul / Blues',
     'Salsa / Cumbia', 'Punk / Hardcore', 'Electronic / Dance', 'Hip Hop / Rap',
     'Hard Rock / Metal', 'Folk / Country / Reggae', 'Artículos / Merch',
-    'CDS',
 ];
 
 // Normaliza un encabezado/etiqueta para emparejar por NOMBRE de forma tolerante:
@@ -199,13 +199,7 @@ const genresToggleLabel = document.getElementById('genresToggleLabel');
 GENRES.forEach(g => {
     const btn = document.createElement('button');
     btn.className = 'genre-btn' + (g === activeGenre ? ' active' : '');
-    if (g === 'Catálogo Completo') {
-        // En desktop se ve "Catálogo Completo"; en móvil "Filtrar por estilo" (CSS).
-        btn.innerHTML = '<span class="lbl-full">Catálogo Completo</span>' +
-                        '<span class="lbl-mobile">Filtrar por estilo</span>';
-    } else {
-        btn.textContent = g;
-    }
+    btn.textContent = g;
     btn.dataset.genre = g;
     btn.addEventListener('click', () => {
         activeGenre = g;
@@ -222,11 +216,16 @@ genresToggle.addEventListener('click', () => {
     genreList.classList.toggle('open');
     genresToggle.classList.toggle('open');
 });
+// Estado inicial: el catálogo completo está activo -> la barra "Filtrar por estilo" va en naranja.
+genresToggle.classList.toggle('active', activeGenre === 'Catálogo Completo');
  
 function setActiveGenreUI(g) {
     document.querySelectorAll('.genre-btn').forEach(b => b.classList.toggle('active', b.dataset.genre === g));
-    // El acordeón (solo móvil) muestra "Filtrar por estilo" para el catálogo completo.
-    genresToggleLabel.textContent = (g === 'Catálogo Completo') ? 'Filtrar por estilo' : g;
+    // La barra (solo móvil) muestra el estilo elegido. "Filtrar por estilo" es solo
+    // el texto inicial (en el HTML) hasta que se elige una opción por primera vez.
+    genresToggleLabel.textContent = g;
+    // La barra "Filtrar por estilo" se pinta de naranja (activa) solo cuando ves todo el catálogo.
+    genresToggle.classList.toggle('active', g === 'Catálogo Completo');
     genreList.classList.remove('open');
     genresToggle.classList.remove('open');
 }
@@ -390,7 +389,7 @@ function render() {
         empty.className = 'empty-state';
         const msg = (activeGenre === 'Novedades' && !searchQuery) ?
             'Pronto habrá novedades disponibles. Mientras tanto, explora el catálogo completo.' :
-            'No encontramos vinilos con esa búsqueda.';
+            'No encontramos discos con esa búsqueda.';
         empty.innerHTML = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>${msg}</p>`;
         catalogEl.appendChild(empty);
         return;
@@ -445,7 +444,7 @@ function openModal(vinyl) {
     mActions.innerHTML = '';
     const mActionsLabel = document.createElement('p');
     mActionsLabel.className = 'modal-actions-label';
-    mActionsLabel.textContent = 'Pide tu vinilo a través de:';
+    mActionsLabel.textContent = 'Pide tu disco a través de:';
     mActions.appendChild(mActionsLabel);
     const btnsRow = document.createElement('div');
     btnsRow.className = 'modal-actions-btns';
