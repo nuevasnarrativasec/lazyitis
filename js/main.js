@@ -231,9 +231,17 @@ function setActiveGenreUI(g) {
 }
  
 // ─── SEARCH ────────────────────────────────────────────────────────────
+// Quita tildes/diacríticos para que la búsqueda no sea estricta con los acentos
+// (p. ej. "cancion" encuentra "Canción").
+function normalizeSearch(s) {
+    return (s == null ? '' : String(s))
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase();
+}
+
 const searchInput = document.getElementById('searchInput');
 searchInput.addEventListener('input', () => {
-    searchQuery = searchInput.value.trim().toLowerCase();
+    searchQuery = normalizeSearch(searchInput.value.trim());
     if (searchQuery) {
         // Override genre: show everything, activate Catálogo Completo
         activeGenre = 'Catálogo Completo';
@@ -295,7 +303,7 @@ function filtered() {
             matchGenre = v.genres.includes(activeGenre);
         }
         const q = searchQuery;
-        const matchSearch = !q || v.artist.toLowerCase().includes(q) || v.album.toLowerCase().includes(q) || v.edition.toLowerCase().includes(q);
+        const matchSearch = !q || normalizeSearch(v.artist).includes(q) || normalizeSearch(v.album).includes(q) || normalizeSearch(v.edition).includes(q);
         return matchGenre && matchSearch;
     });
 }
